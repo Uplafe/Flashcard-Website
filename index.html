@@ -1,0 +1,466 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Flashcards Pro</title>
+    <meta name="theme-color" content="#4f46e5">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+    <nav class="navbar">
+        <a href="/" class="nav-brand"></a>
+        <div class="nav-links">
+            <a href="index.html" class="nav-link">Home</a>
+            <a href="create.html" class="nav-link">Create</a>
+            <a href="about.html" class="nav-link">About</a>
+            <a href="terms.html" class="nav-link">Terms</a>
+        </div>
+    </nav>
+
+    
+    <style>
+        :root {
+            --primary: #4f46e5;
+            --secondary: #6366f1;
+            --background: #f8fafc;
+            --text: white;
+            --shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Segoe UI', sans-serif;
+        }
+
+        body {
+            background: var(--background);
+            min-height: 100vh;
+        }
+
+        .logo {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-weight: bold;
+            font-size: 24px;
+            color: var(--primary);
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        .home-screen {
+            text-align: center;
+            padding: 4rem 2rem;
+            max-width: 800px;
+            margin: 0 auto;
+        }
+
+        .creator-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+            display: none;
+        }
+
+        .modern-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            background: var(--primary);
+            color: white;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: var(--shadow);
+            margin: 8px;
+        }
+
+        .modern-btn:hover {
+            background: var(--secondary);
+            transform: translateY(-2px);
+        }
+
+        .preview-section {
+            display: flex;
+            justify-content: center;
+            margin: 2rem 0;
+        }
+
+        .preview-card {
+            width: 600px;
+            height: 400px;
+            max-width: 90%;
+            perspective: 1000px;
+        }
+
+        .card-inner {
+            width: 100%;
+            height: 100%;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.6s;
+            cursor: pointer;
+            border-radius: 20px;
+            background: var(--primary);
+            color: var(--text);
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+        }
+
+        .card-inner.flipped {
+            transform: rotateY(180deg);
+        }
+
+        .card-face {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            backface-visibility: hidden;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+            border-radius: 20px;
+            text-align: center;
+            font-size: 1.2rem;
+        }
+
+        .card-back {
+            transform: rotateY(180deg);
+        }
+
+        .input-group {
+            display: grid;
+            gap: 2rem;
+            grid-template-columns: 1fr 1fr;
+            margin: 2rem 0;
+        }
+
+        .image-upload {
+            margin-top: 1rem;
+        }
+
+        input, textarea {
+            padding: 12px;
+            border: 2px solid #e2e8f0;
+            border-radius: 8px;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .card-gallery {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-top: 2rem;
+        }
+
+        .gallery-card {
+            background: var(--primary);
+            color: white;
+            border-radius: 16px;
+            padding: 1.5rem;
+            min-height: 200px;
+            position: relative;
+            box-shadow: var(--shadow);
+            cursor: pointer;
+        }
+
+        .export-modal {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: white;
+            padding: 2rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none;
+        }
+
+        .overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.5);
+            display: none;
+            z-index: 999;
+        }
+
+        .edit-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: rgba(255, 255, 255, 0.9);
+            color: var(--primary);
+            padding: 6px 12px;
+            border-radius: 20px;
+            cursor: pointer;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        .navbar {
+    background: var(--background);
+    padding: 1rem 2rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+}
+
+.nav-brand {
+    color: var(--primary);
+    font-size: 1.5rem;
+    font-weight: bold;
+    text-decoration: none;
+}
+
+.nav-links {
+    display: flex;
+    gap: 2rem;
+}
+
+.nav-link {
+    color: var(--primary);
+    text-decoration: none;
+    padding: 0.5rem 1rem;
+    border-radius: 5px;
+    transition: background 0.3s ease;
+}
+
+.nav-link:hover {
+    background: rgba(255,255,255,0.1);
+}
+    </style>
+</head>
+<body>
+    <div class="logo" onclick="showHome()">📚 Flashcards</div>
+    
+    <!-- Home Screen -->
+    <div id="homeScreen" class="home-screen">
+        <h1>Welcome to Flashcards Pro</h1>
+        <p>Create, study, and share interactive flashcards</p>
+        <div style="margin-top: 2rem;">
+            <button class="modern-btn" onclick="showCreator()">🗂️ Create New Deck</button>
+            <button class="modern-btn" onclick="document.getElementById('fileInput').click()">📤 Upload Deck</button>
+            <input type="file" id="fileInput" class="hidden" accept=".json" onchange="importDeck(event)">
+        </div>
+    </div>
+
+    <!-- Creator Interface -->
+    <div class="creator-container" id="creatorContainer">
+        <div class="preview-section">
+            <div class="preview-card">
+                <div class="card-inner" id="cardInner" onclick="togglePreviewFlip()">
+                    <div class="card-face" id="cardFront"></div>
+                    <div class="card-face card-back" id="cardBack"></div>
+                </div>
+            </div>
+        </div>
+
+        <div class="input-group">
+            <div>
+                <textarea id="question" placeholder="Front content" oninput="updatePreview()" rows="4"></textarea>
+                <button class="modern-btn" onclick="triggerImageUpload('front')">Add Front Image</button>
+                <img id="frontImagePreview" class="hidden" style="max-width: 100px; margin-top: 1rem;">
+            </div>
+            <div>
+                <textarea id="answer" placeholder="Back content" oninput="updatePreview()" rows="4"></textarea>
+                <button class="modern-btn" onclick="triggerImageUpload('back')">Add Back Image</button>
+                <img id="backImagePreview" class="hidden" style="max-width: 100px; margin-top: 1rem;">
+            </div>
+        </div>
+
+        <div style="text-align: center;">
+            <button class="modern-btn" onclick="addCard()">➡️ Add Card</button>
+            <button class="modern-btn" onclick="finishDeck()">✅ Finish Deck</button>
+        </div>
+
+        <div class="card-gallery" id="cardGallery"></div>
+    </div>
+
+    <!-- Export Modal -->
+    <div class="export-modal" id="exportModal">
+        <h3>Export Options</h3>
+        <button class="modern-btn" onclick="exportPDF()">📄 Download PDF</button>
+        <button class="modern-btn" onclick="exportJSON()">📁 Download JSON</button>
+        <button class="modern-btn" onclick="closeExportModal()">❌ Cancel</button>
+    </div>
+
+    <div class="overlay" id="overlay"></div>
+    <input type="file" id="imageInput" class="hidden" accept="image/*" onchange="handleImageUpload(event)">
+
+    <script>
+        let flashcards = [];
+        let currentCard = { question: '', answer: '', questionImage: null, answerImage: null };
+        let editingIndex = -1;
+        let targetSide = 'front';
+
+        // Navigation
+        function showHome() {
+            document.getElementById('homeScreen').style.display = 'block';
+            document.getElementById('creatorContainer').style.display = 'none';
+        }
+
+        function showCreator() {
+            document.getElementById('homeScreen').style.display = 'none';
+            document.getElementById('creatorContainer').style.display = 'block';
+            flashcards = [];
+            updateCardGallery();
+        }
+
+        // Card Creation
+        function triggerImageUpload(side) {
+            targetSide = side;
+            document.getElementById('imageInput').click();
+        }
+
+        function handleImageUpload(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                if (targetSide === 'front') {
+                    currentCard.questionImage = e.target.result;
+                    document.getElementById('frontImagePreview').src = e.target.result;
+                    document.getElementById('frontImagePreview').classList.remove('hidden');
+                } else {
+                    currentCard.answerImage = e.target.result;
+                    document.getElementById('backImagePreview').src = e.target.result;
+                    document.getElementById('backImagePreview').classList.remove('hidden');
+                }
+                updatePreview();
+            };
+            reader.readAsDataURL(file);
+        }
+
+        function updatePreview() {
+            currentCard.question = document.getElementById('question').value;
+            currentCard.answer = document.getElementById('answer').value;
+
+            document.getElementById('cardFront').innerHTML = `
+                ${currentCard.questionImage ? `<img src="${currentCard.questionImage}" style="max-height: 200px;">` : ''}
+                <div style="margin-top: 1rem">${currentCard.question}</div>
+            `;
+
+            document.getElementById('cardBack').innerHTML = `
+                ${currentCard.answerImage ? `<img src="${currentCard.answerImage}" style="max-height: 200px;">` : ''}
+                <div style="margin-top: 1rem">${currentCard.answer}</div>
+            `;
+        }
+
+        function togglePreviewFlip() {
+            document.getElementById('cardInner').classList.toggle('flipped');
+        }
+
+        function addCard() {
+            if (!currentCard.question && !currentCard.questionImage) {
+                alert('Please add a question or image');
+                return;
+            }
+
+            if (editingIndex > -1) {
+                flashcards[editingIndex] = {...currentCard};
+                editingIndex = -1;
+            } else {
+                flashcards.push({...currentCard});
+            }
+            
+            currentCard = { question: '', answer: '', questionImage: null, answerImage: null };
+            document.getElementById('question').value = '';
+            document.getElementById('answer').value = '';
+            document.getElementById('frontImagePreview').classList.add('hidden');
+            document.getElementById('backImagePreview').classList.add('hidden');
+            updateCardGallery();
+        }
+
+        function updateCardGallery() {
+            const gallery = document.getElementById('cardGallery');
+            gallery.innerHTML = flashcards.map((card, index) => `
+                <div class="gallery-card" onclick="startStudy(${index})">
+                    <div class="edit-btn" onclick="event.stopPropagation(); editCard(${index})">✏️ Edit</div>
+                    ${card.questionImage ? `<img src="${card.questionImage}" style="max-height: 120px;">` : ''}
+                    <div style="margin-top: 1rem">${card.question || 'Image Card'}</div>
+                </div>
+            `).join('');
+        }
+
+        function editCard(index) {
+            editingIndex = index;
+            const card = flashcards[index];
+            currentCard = {...card};
+            document.getElementById('question').value = card.question;
+            document.getElementById('answer').value = card.answer;
+            if (card.questionImage) {
+                document.getElementById('frontImagePreview').src = card.questionImage;
+                document.getElementById('frontImagePreview').classList.remove('hidden');
+            }
+            if (card.answerImage) {
+                document.getElementById('backImagePreview').src = card.answerImage;
+                document.getElementById('backImagePreview').classList.remove('hidden');
+            }
+            updatePreview();
+        }
+
+        // Export/Import
+        function finishDeck() {
+            document.getElementById('exportModal').style.display = 'block';
+            document.getElementById('overlay').style.display = 'block';
+        }
+
+        function closeExportModal() {
+            document.getElementById('exportModal').style.display = 'none';
+            document.getElementById('overlay').style.display = 'none';
+        }
+
+        function exportJSON() {
+            const data = JSON.stringify(flashcards);
+            const blob = new Blob([data], {type: 'application/json'});
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'flashcards.json';
+            a.click();
+            closeExportModal();
+        }
+
+        function exportPDF() {
+            const doc = new jspdf.jsPDF();
+            doc.text('Flashcards Export', 10, 10);
+            flashcards.forEach((card, index) => {
+                const y = 20 + (index * 40);
+                doc.text(`Card ${index + 1}:`, 10, y);
+                doc.text(`Q: ${card.question}`, 15, y + 5);
+                doc.text(`A: ${card.answer}`, 15, y + 10);
+            });
+            doc.save('flashcards.pdf');
+            closeExportModal();
+        }
+
+        function importDeck(event) {
+            const file = event.target.files[0];
+            if (!file) return;
+
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                flashcards = JSON.parse(e.target.result);
+                updateCardGallery();
+                showCreator();
+            };
+            reader.readAsText(file);
+        }
+
+        // Initialization
+        document.addEventListener('DOMContentLoaded', showHome);
+    </script>
+</body>
+</html>
