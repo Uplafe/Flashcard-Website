@@ -1,0 +1,372 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>About — FlashForge</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .about-hero {
+      padding: 4rem 1.5rem 3rem;
+      text-align: center;
+      border-bottom: 1px solid var(--border);
+      position: relative;
+      overflow: hidden;
+    }
+    .about-hero::before {
+      content: '';
+      position: absolute;
+      width: 600px; height: 400px;
+      border-radius: 50%;
+      background: radial-gradient(ellipse, rgba(108,99,255,0.12), transparent);
+      top: 50%; left: 50%;
+      transform: translate(-50%, -50%);
+      pointer-events: none;
+    }
+    .about-hero-inner { position: relative; z-index: 1; }
+    .about-hero h1 { margin-bottom: 1rem; }
+    .about-hero p { max-width: 540px; margin: 0 auto; font-size: 1.05rem; }
+
+    .about-section { padding: 3.5rem 0; border-bottom: 1px solid var(--border); }
+    .about-section:last-child { border-bottom: none; }
+
+    .tech-stack {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .tech-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      transition: all var(--transition);
+    }
+    .tech-item:hover { border-color: var(--accent); transform: translateY(-2px); }
+    .tech-icon { font-size: 1.5rem; }
+    .tech-name { font-weight: 600; font-size: 0.9rem; }
+    .tech-desc { font-size: 0.78rem; color: var(--text-muted); }
+
+    .faq-list { display: flex; flex-direction: column; gap: 1rem; margin-top: 2rem; }
+    .faq-item {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .faq-q {
+      padding: 1rem 1.25rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      transition: background var(--transition);
+    }
+    .faq-q:hover { background: var(--bg-elevated); }
+    .faq-a {
+      padding: 0 1.25rem;
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s ease, padding 0.3s ease;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .faq-a.open { max-height: 200px; padding: 0.75rem 1.25rem 1.25rem; }
+    .faq-arrow { transition: transform 0.3s ease; font-size: 0.8rem; }
+    .faq-arrow.open { transform: rotate(180deg); }
+
+    .setup-steps {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 2rem;
+    }
+    .setup-step {
+      display: flex;
+      gap: 1rem;
+      align-items: flex-start;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 1.25rem;
+    }
+    .setup-num {
+      width: 32px; height: 32px;
+      background: var(--accent-dim);
+      border: 1px solid var(--accent-glow);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 0.85rem;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .setup-content h4 { margin-bottom: 0.35rem; font-size: 0.95rem; }
+    .setup-content p { font-size: 0.85rem; }
+    code {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      padding: 0.15rem 0.45rem;
+      border-radius: 4px;
+      font-family: monospace;
+      font-size: 0.85em;
+      color: var(--accent);
+    }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="logo-icon">⚡</div>
+      FlashForge
+    </a>
+    <div class="nav-links">
+      <a href="app.html" class="nav-link">My Decks</a>
+      <a href="explore.html" class="nav-link">Explore</a>
+      <a href="about.html" class="nav-link active">About</a>
+    </div>
+    <div class="nav-actions">
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+      <a href="app.html" class="btn btn-primary btn-sm">Get Started</a>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="about-hero">
+      <div class="about-hero-inner">
+        <div style="font-size:3rem;margin-bottom:1rem">⚡</div>
+        <h1>About FlashForge</h1>
+        <p>A beautiful, open-source flashcard platform built for serious learners. Free forever, no ads, no limits.</p>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- What is it -->
+      <div class="about-section">
+        <span class="section-label">What is FlashForge?</span>
+        <h2 style="margin-bottom:1rem">Built to make learning stick</h2>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:2rem;align-items:start">
+          <div>
+            <p style="margin-bottom:1rem;line-height:1.8">FlashForge is a modern flashcard web application designed to help you study smarter. Create rich flashcard decks with text and images, study with an interactive flip-card interface, and export your decks as polished PDFs or portable JSON files.</p>
+            <p style="line-height:1.8">Sign up for a free account to sync your decks across devices, or use the app right away as a guest — your data is stored locally and travels with you via JSON export.</p>
+          </div>
+          <div style="display:flex;flex-direction:column;gap:0.75rem">
+            <div style="display:flex;align-items:center;gap:10px;padding:0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+              <span>✓</span><span style="font-size:0.9rem">Unlimited decks and cards</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+              <span>✓</span><span style="font-size:0.9rem">PDF & JSON export</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+              <span>✓</span><span style="font-size:0.9rem">Public & private decks</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+              <span>✓</span><span style="font-size:0.9rem">Dark & light theme</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+              <span>✓</span><span style="font-size:0.9rem">Keyboard shortcuts</span>
+            </div>
+            <div style="display:flex;align-items:center;gap:10px;padding:0.9rem;background:var(--bg-card);border:1px solid var(--border);border-radius:var(--radius)">
+              <span>✓</span><span style="font-size:0.9rem">Image support on cards</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Firebase setup -->
+      <div class="about-section">
+        <span class="section-label">Setup Guide</span>
+        <h2 style="margin-bottom:0.5rem">Setting up Firebase (optional)</h2>
+        <p style="margin-bottom:0.5rem">FlashForge works out of the box with local storage — no setup needed. To enable cloud sync, Google sign-in, and public deck sharing, connect Firebase in about 5 minutes:</p>
+        <div class="setup-steps">
+          <div class="setup-step">
+            <div class="setup-num">1</div>
+            <div class="setup-content">
+              <h4>Create a Firebase project</h4>
+              <p>Go to <a href="https://console.firebase.google.com" target="_blank">console.firebase.google.com</a> → New Project. Give it a name and follow the prompts.</p>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="setup-num">2</div>
+            <div class="setup-content">
+              <h4>Add a Web App</h4>
+              <p>In your project → Project Settings → Add app → Web. Copy the <code>firebaseConfig</code> object.</p>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="setup-num">3</div>
+            <div class="setup-content">
+              <h4>Enable Authentication</h4>
+              <p>Firebase Console → Authentication → Sign-in method → Enable <strong>Email/Password</strong> and <strong>Google</strong>.</p>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="setup-num">4</div>
+            <div class="setup-content">
+              <h4>Enable Firestore</h4>
+              <p>Firebase Console → Firestore Database → Create database → Start in production mode → choose a region.</p>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="setup-num">5</div>
+            <div class="setup-content">
+              <h4>Set Firestore Rules</h4>
+              <p>In Firestore → Rules, paste the rules from <code>README.md</code> to allow users to read/write their own decks and read public ones.</p>
+            </div>
+          </div>
+          <div class="setup-step">
+            <div class="setup-num">6</div>
+            <div class="setup-content">
+              <h4>Paste your config</h4>
+              <p>Open <code>js/data.js</code> and replace the <code>FIREBASE_CONFIG</code> object with your copied config. Done!</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tech stack -->
+      <div class="about-section">
+        <span class="section-label">Tech Stack</span>
+        <h2 style="margin-bottom:0.5rem">Built with the web platform</h2>
+        <p>No frameworks, no build steps — just clean HTML, CSS, and JavaScript. Deploy anywhere.</p>
+        <div class="tech-stack">
+          <div class="tech-item">
+            <div class="tech-icon">🌐</div>
+            <div>
+              <div class="tech-name">Vanilla JS</div>
+              <div class="tech-desc">No framework needed</div>
+            </div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon">🎨</div>
+            <div>
+              <div class="tech-name">CSS Variables</div>
+              <div class="tech-desc">Dynamic theming</div>
+            </div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon">🔥</div>
+            <div>
+              <div class="tech-name">Firebase</div>
+              <div class="tech-desc">Auth + Firestore</div>
+            </div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon">📄</div>
+            <div>
+              <div class="tech-name">jsPDF</div>
+              <div class="tech-desc">PDF generation</div>
+            </div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon">🔤</div>
+            <div>
+              <div class="tech-name">Google Fonts</div>
+              <div class="tech-desc">Playfair + Karla</div>
+            </div>
+          </div>
+          <div class="tech-item">
+            <div class="tech-icon">🐙</div>
+            <div>
+              <div class="tech-name">GitHub Pages</div>
+              <div class="tech-desc">Free hosting</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="about-section">
+        <span class="section-label">FAQ</span>
+        <h2>Frequently asked questions</h2>
+        <div class="faq-list">
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Do I need an account to use FlashForge?
+              <span class="faq-arrow">▼</span>
+            </div>
+            <div class="faq-a">No — you can create and study decks as a guest. Your decks are saved in your browser's local storage. Sign in to sync across devices and publish public decks.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Is FlashForge free?
+              <span class="faq-arrow">▼</span>
+            </div>
+            <div class="faq-a">Yes, completely free. No premium tier, no ads, no limits on decks or cards. If you self-host with Firebase, you stay within their free tier for typical usage.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              How do I back up my decks?
+              <span class="faq-arrow">▼</span>
+            </div>
+            <div class="faq-a">Use the Export → Download JSON button on any deck. This creates a portable .json file you can re-import at any time, even on a different device or install.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              How does the PDF export work?
+              <span class="faq-arrow">▼</span>
+            </div>
+            <div class="faq-a">PDFs are generated in landscape A4 format. Each card gets two pages — the first shows the question, the second shows the answer. A cover page with the deck title is included. Great for printing!</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              Can I add images to my cards?
+              <span class="faq-arrow">▼</span>
+            </div>
+            <div class="faq-a">Yes! When creating or editing a card, click "Add image" on either the front or back panel. Images are stored as base64 data inside the deck JSON, so they travel with your export.</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-q" onclick="toggleFaq(this)">
+              What keyboard shortcuts are available?
+              <span class="faq-arrow">▼</span>
+            </div>
+            <div class="faq-a">In study mode: Space or F to flip a card, → to mark as known / go next, ← to mark as missed / go previous, R to restart the session, S to shuffle cards. In the card editor: Ctrl+Enter to add a card.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <footer>
+      <div class="footer-inner">
+        <div class="nav-brand">
+          <div class="logo-icon" style="width:26px;height:26px;font-size:13px">⚡</div>
+          FlashForge
+        </div>
+        <div class="footer-links">
+          <a href="explore.html" class="footer-link">Explore</a>
+          <a href="app.html" class="footer-link">My Decks</a>
+          <a href="terms.html" class="footer-link">Terms</a>
+        </div>
+        <div style="font-size:0.82rem;color:var(--text-subtle)">Free & open source ⚡</div>
+      </div>
+    </footer>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="js/theme.js"></script>
+  <script>
+    function toggleFaq(el) {
+      const answer = el.nextElementSibling;
+      const arrow  = el.querySelector('.faq-arrow');
+      answer.classList.toggle('open');
+      arrow.classList.toggle('open');
+    }
+  </script>
+
+  <style>
+    .footer-inner { max-width:1160px;margin:0 auto;display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:1rem; }
+    .footer-links { display:flex;gap:1.5rem;flex-wrap:wrap; }
+    .footer-link  { color:var(--text-muted);font-size:0.85rem;transition:color var(--transition); }
+    .footer-link:hover { color:var(--text); }
+    footer { border-top:1px solid var(--border);padding:2rem 1.5rem; }
+    @media(max-width:768px){ .about-section > div[style*="grid-template-columns:1fr 1fr"]{ grid-template-columns:1fr!important; } }
+  </style>
+</body>
+</html>

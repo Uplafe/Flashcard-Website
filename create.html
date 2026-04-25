@@ -1,0 +1,674 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Create Deck — FlashForge</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .create-layout {
+      display: grid;
+      grid-template-columns: 1fr 360px;
+      gap: 2rem;
+      align-items: start;
+    }
+    @media (max-width: 900px) {
+      .create-layout { grid-template-columns: 1fr; }
+      .create-sidebar { order: -1; }
+    }
+
+    /* Card builder */
+    .card-editor {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+    }
+    .card-editor-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      background: var(--bg-elevated);
+    }
+    .card-editor-body { padding: 1.5rem; }
+
+    /* Preview card */
+    .preview-stage {
+      background: var(--bg-elevated);
+      border-radius: var(--radius);
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+      margin-bottom: 1.5rem;
+    }
+    .preview-card-wrap {
+      width: 340px;
+      height: 200px;
+      perspective: 1200px;
+    }
+    .preview-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.6s cubic-bezier(0.4,0,0.2,1);
+      cursor: pointer;
+      border-radius: var(--radius-lg);
+    }
+    .preview-inner.flipped { transform: rotateY(180deg); }
+    .preview-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: var(--radius-lg);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 1.25rem;
+      text-align: center;
+      font-size: 0.95rem;
+      color: white;
+      overflow: hidden;
+    }
+    .preview-front { background: linear-gradient(135deg, #6C63FF, #4A90D9); }
+    .preview-back  { transform: rotateY(180deg); background: linear-gradient(135deg, #10D9A4, #0891B2); }
+    [data-theme="light"] .preview-front { background: linear-gradient(135deg, #6C63FF, #4A90D9); }
+    [data-theme="light"] .preview-back  { background: linear-gradient(135deg, #0891B2, #6C63FF); }
+    .preview-label {
+      position: absolute;
+      top: 10px;
+      left: 12px;
+      font-size: 0.65rem;
+      font-weight: 700;
+      letter-spacing: 0.1em;
+      opacity: 0.6;
+    }
+    .preview-hint {
+      position: absolute;
+      bottom: 8px;
+      right: 10px;
+      font-size: 0.65rem;
+      opacity: 0.5;
+    }
+    .preview-img {
+      max-width: 100%;
+      max-height: 80px;
+      border-radius: 8px;
+      object-fit: contain;
+      margin-bottom: 6px;
+    }
+
+    /* Two-panel input */
+    .panel-inputs {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.25rem;
+      margin-bottom: 1.25rem;
+    }
+    @media (max-width: 600px) { .panel-inputs { grid-template-columns: 1fr; } }
+
+    .panel-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .panel-card-header {
+      padding: 0.65rem 1rem;
+      font-size: 0.78rem;
+      font-weight: 700;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+      color: var(--text-muted);
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .panel-card-body { padding: 0.75rem; }
+    .panel-card textarea {
+      background: transparent;
+      border: none;
+      padding: 0;
+      font-size: 0.95rem;
+      resize: none;
+      min-height: 90px;
+    }
+    .panel-card textarea:focus { box-shadow: none; }
+    .image-preview-thumb {
+      width: 60px;
+      height: 60px;
+      object-fit: cover;
+      border-radius: 6px;
+      border: 1px solid var(--border);
+      cursor: pointer;
+    }
+    .img-row { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; }
+    .remove-img { font-size: 0.75rem; color: var(--danger); cursor: pointer; }
+
+    /* Cards list */
+    .cards-list { display: flex; flex-direction: column; gap: 0.6rem; margin-top: 1.5rem; }
+    .card-list-item {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 0.9rem 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      cursor: pointer;
+      transition: all var(--transition);
+    }
+    .card-list-item:hover { border-color: var(--accent); }
+    .card-list-item.editing { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
+    .card-num {
+      width: 28px; height: 28px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.78rem;
+      font-weight: 700;
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .card-list-text { flex: 1; min-width: 0; }
+    .card-list-q { font-size: 0.88rem; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-list-a { font-size: 0.78rem; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+    .card-list-del { color: var(--danger); font-size: 14px; flex-shrink: 0; padding: 4px; cursor: pointer; opacity: 0; transition: opacity var(--transition); }
+    .card-list-item:hover .card-list-del { opacity: 1; }
+
+    /* Right panel */
+    .create-sidebar {}
+    .sidebar-box {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      margin-bottom: 1.25rem;
+    }
+    .sidebar-box-header {
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid var(--border);
+      font-weight: 600;
+      font-size: 0.9rem;
+      background: var(--bg-elevated);
+    }
+    .sidebar-box-body { padding: 1.25rem; }
+
+    .color-options { display: flex; gap: 8px; flex-wrap: wrap; }
+    .color-opt {
+      width: 28px; height: 28px;
+      border-radius: 50%;
+      cursor: pointer;
+      border: 2px solid transparent;
+      transition: all var(--transition);
+    }
+    .color-opt.selected { border-color: white; transform: scale(1.15); }
+    [data-theme="light"] .color-opt.selected { border-color: #333; }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="logo-icon">⚡</div>
+      FlashForge
+    </a>
+    <div class="nav-links">
+      <a href="app.html" class="nav-link">My Decks</a>
+    </div>
+    <div class="nav-actions">
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+      <a href="app.html" class="btn btn-secondary btn-sm">← Back</a>
+      <button class="btn btn-primary btn-sm" onclick="saveDeck()" id="saveBtn">Save Deck</button>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="container" style="padding-top:2rem;padding-bottom:4rem">
+
+      <!-- Page title -->
+      <div style="margin-bottom:1.5rem">
+        <h2 id="pageTitle">Create New Deck</h2>
+        <p class="page-subtitle">Add cards below, then save or export when done.</p>
+      </div>
+
+      <div class="create-layout">
+        <!-- Left: editor -->
+        <div>
+          <!-- Card Editor -->
+          <div class="card-editor">
+            <div class="card-editor-header">
+              <div style="font-weight:600;font-size:0.9rem" id="editorTitle">New Card</div>
+              <div style="display:flex;gap:6px;align-items:center">
+                <span style="font-size:0.8rem;color:var(--text-muted)" id="cardCounter">Card 1</span>
+                <kbd class="kbd">Ctrl+Enter</kbd>
+                <span style="font-size:0.8rem;color:var(--text-muted)">to add</span>
+              </div>
+            </div>
+
+            <div class="card-editor-body">
+              <!-- Preview -->
+              <div class="preview-stage">
+                <div class="preview-card-wrap">
+                  <div class="preview-inner" id="previewInner" onclick="flipPreview()">
+                    <div class="preview-face preview-front" id="previewFront">
+                      <div class="preview-label">FRONT</div>
+                      <div id="previewFrontContent" style="color:rgba(255,255,255,0.5);font-style:italic">Question preview</div>
+                      <div class="preview-hint">click to flip ↻</div>
+                    </div>
+                    <div class="preview-face preview-back" id="previewBack">
+                      <div class="preview-label">BACK</div>
+                      <div id="previewBackContent" style="color:rgba(255,255,255,0.5);font-style:italic">Answer preview</div>
+                      <div class="preview-hint">↻ click to flip</div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Inputs -->
+              <div class="panel-inputs">
+                <div class="panel-card">
+                  <div class="panel-card-header">
+                    <span>📝</span> Front (Question)
+                  </div>
+                  <div class="panel-card-body">
+                    <textarea id="questionInput" placeholder="Enter question or term…" oninput="updatePreview()" rows="4"></textarea>
+                    <div class="img-row" id="frontImgRow" style="display:none">
+                      <img id="frontImgThumb" class="image-preview-thumb" src="" alt="">
+                      <span class="remove-img" onclick="removeImage('front')">✕ Remove</span>
+                    </div>
+                    <input type="file" id="frontImgInput" accept="image/*" class="hidden" onchange="handleImage('front',event)">
+                    <button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:0.8rem" onclick="document.getElementById('frontImgInput').click()">
+                      🖼 Add image
+                    </button>
+                  </div>
+                </div>
+                <div class="panel-card">
+                  <div class="panel-card-header">
+                    <span>✅</span> Back (Answer)
+                  </div>
+                  <div class="panel-card-body">
+                    <textarea id="answerInput" placeholder="Enter answer or definition…" oninput="updatePreview()" rows="4"></textarea>
+                    <div class="img-row" id="backImgRow" style="display:none">
+                      <img id="backImgThumb" class="image-preview-thumb" src="" alt="">
+                      <span class="remove-img" onclick="removeImage('back')">✕ Remove</span>
+                    </div>
+                    <input type="file" id="backImgInput" accept="image/*" class="hidden" onchange="handleImage('back',event)">
+                    <button class="btn btn-ghost btn-sm" style="margin-top:6px;font-size:0.8rem" onclick="document.getElementById('backImgInput').click()">
+                      🖼 Add image
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Actions -->
+              <div style="display:flex;gap:0.75rem;flex-wrap:wrap;align-items:center">
+                <button class="btn btn-primary" onclick="addCard()">
+                  <span id="addBtnText">➕ Add Card</span>
+                </button>
+                <button class="btn btn-secondary" onclick="clearEditor()">Clear</button>
+                <div style="flex:1"></div>
+                <span style="font-size:0.82rem;color:var(--text-muted)" id="totalCardsLabel"></span>
+              </div>
+
+              <!-- Cards list -->
+              <div class="cards-list" id="cardsList"></div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Right: deck settings -->
+        <div class="create-sidebar">
+          <!-- Deck info -->
+          <div class="sidebar-box">
+            <div class="sidebar-box-header">📦 Deck Settings</div>
+            <div class="sidebar-box-body">
+              <div class="form-group">
+                <label class="form-label">Title *</label>
+                <input type="text" id="deckTitle" placeholder="e.g. Biology Chapter 5" maxlength="80">
+              </div>
+              <div class="form-group">
+                <label class="form-label">Description</label>
+                <textarea id="deckDesc" placeholder="What is this deck about?" rows="3" style="min-height:70px"></textarea>
+              </div>
+              <div class="form-group">
+                <label class="form-label">Subject / Tag</label>
+                <input type="text" id="deckTag" placeholder="e.g. Science, Math, Language…" maxlength="40">
+              </div>
+            </div>
+          </div>
+
+          <!-- Visibility -->
+          <div class="sidebar-box">
+            <div class="sidebar-box-header">🔒 Visibility</div>
+            <div class="sidebar-box-body">
+              <label class="toggle-wrap" style="cursor:pointer">
+                <label class="toggle">
+                  <input type="checkbox" id="isPublicToggle">
+                  <div class="toggle-track"></div>
+                  <div class="toggle-thumb"></div>
+                </label>
+                <div>
+                  <div style="font-weight:600;font-size:0.9rem">Make Public</div>
+                  <div style="font-size:0.8rem;color:var(--text-muted)">Anyone can discover and study this deck</div>
+                </div>
+              </label>
+            </div>
+          </div>
+
+          <!-- Card color -->
+          <div class="sidebar-box">
+            <div class="sidebar-box-header">🎨 Card Color Theme</div>
+            <div class="sidebar-box-body">
+              <div class="color-options" id="colorOptions">
+                <div class="color-opt selected" style="background:linear-gradient(135deg,#6C63FF,#4A90D9)" data-color="purple" onclick="selectColor(this)"></div>
+                <div class="color-opt" style="background:linear-gradient(135deg,#10D9A4,#0891B2)" data-color="green" onclick="selectColor(this)"></div>
+                <div class="color-opt" style="background:linear-gradient(135deg,#FF4757,#C0392B)" data-color="red" onclick="selectColor(this)"></div>
+                <div class="color-opt" style="background:linear-gradient(135deg,#FFB300,#FF6B35)" data-color="amber" onclick="selectColor(this)"></div>
+                <div class="color-opt" style="background:linear-gradient(135deg,#1E3A5F,#4A90D9)" data-color="navy" onclick="selectColor(this)"></div>
+                <div class="color-opt" style="background:linear-gradient(135deg,#2D3748,#718096)" data-color="slate" onclick="selectColor(this)"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Export box -->
+          <div class="sidebar-box">
+            <div class="sidebar-box-header">📤 Export</div>
+            <div class="sidebar-box-body" style="display:flex;flex-direction:column;gap:0.6rem">
+              <button class="btn btn-secondary w-full" onclick="exportCurrent('json')">📁 Download JSON</button>
+              <button class="btn btn-secondary w-full" onclick="exportCurrent('pdf')">📄 Download PDF</button>
+            </div>
+          </div>
+
+          <!-- Save button large -->
+          <button class="btn btn-primary w-full btn-lg" onclick="saveDeck()">
+            💾 Save Deck
+          </button>
+          <div style="text-align:center;margin-top:0.5rem">
+            <a href="app.html" style="font-size:0.82rem;color:var(--text-muted)">← Back to My Decks</a>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="js/theme.js"></script>
+  <script src="js/data.js"></script>
+  <script>
+    let cards = [];
+    let editingIndex = -1;
+    let currentDeckId = null;
+    let selectedColor = 'purple';
+    let frontImageData = null;
+    let backImageData  = null;
+
+    const colorMap = {
+      purple: 'linear-gradient(135deg,#6C63FF,#4A90D9)',
+      green:  'linear-gradient(135deg,#10D9A4,#0891B2)',
+      red:    'linear-gradient(135deg,#FF4757,#C0392B)',
+      amber:  'linear-gradient(135deg,#FFB300,#FF6B35)',
+      navy:   'linear-gradient(135deg,#1E3A5F,#4A90D9)',
+      slate:  'linear-gradient(135deg,#2D3748,#718096)'
+    };
+
+    // ── Init ─────────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      if (id) {
+        currentDeckId = id;
+        document.getElementById('pageTitle').textContent = 'Edit Deck';
+        document.getElementById('saveBtn').textContent = 'Update Deck';
+        await loadExistingDeck(id);
+      }
+    });
+
+    async function loadExistingDeck(id) {
+      try {
+        const deck = await Decks.getById(id);
+        if (!deck) { showToast('Deck not found', 'error'); return; }
+        document.getElementById('deckTitle').value = deck.title || '';
+        document.getElementById('deckDesc').value = deck.description || '';
+        document.getElementById('deckTag').value = deck.tag || '';
+        document.getElementById('isPublicToggle').checked = !!deck.isPublic;
+        if (deck.color) { selectColorByName(deck.color); }
+        cards = deck.cards || [];
+        renderCardsList();
+      } catch(e) { showToast('Failed to load deck: ' + e.message, 'error'); }
+    }
+
+    // ── Preview ───────────────────────────────────────
+    let previewFlipped = false;
+    function flipPreview() {
+      previewFlipped = !previewFlipped;
+      document.getElementById('previewInner').classList.toggle('flipped', previewFlipped);
+    }
+
+    function updatePreview() {
+      const q = document.getElementById('questionInput').value || '';
+      const a = document.getElementById('answerInput').value || '';
+      const front = document.getElementById('previewFront');
+      const back  = document.getElementById('previewBack');
+
+      const qContent = q || '<span style="color:rgba(255,255,255,0.4);font-style:italic">Question preview</span>';
+      const aContent = a || '<span style="color:rgba(255,255,255,0.4);font-style:italic">Answer preview</span>';
+
+      document.getElementById('previewFrontContent').innerHTML =
+        (frontImageData ? `<img src="${frontImageData}" class="preview-img">` : '') + `<div>${qContent}</div>`;
+      document.getElementById('previewBackContent').innerHTML =
+        (backImageData  ? `<img src="${backImageData}" class="preview-img">` : '') + `<div>${aContent}</div>`;
+    }
+
+    // ── Image handling ────────────────────────────────
+    function handleImage(side, e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        if (side === 'front') {
+          frontImageData = ev.target.result;
+          document.getElementById('frontImgThumb').src = frontImageData;
+          document.getElementById('frontImgRow').style.display = 'flex';
+        } else {
+          backImageData = ev.target.result;
+          document.getElementById('backImgThumb').src = backImageData;
+          document.getElementById('backImgRow').style.display = 'flex';
+        }
+        updatePreview();
+      };
+      reader.readAsDataURL(file);
+      e.target.value = '';
+    }
+
+    function removeImage(side) {
+      if (side === 'front') {
+        frontImageData = null;
+        document.getElementById('frontImgRow').style.display = 'none';
+      } else {
+        backImageData = null;
+        document.getElementById('backImgRow').style.display = 'none';
+      }
+      updatePreview();
+    }
+
+    // ── Add / edit card ───────────────────────────────
+    function addCard() {
+      const q = document.getElementById('questionInput').value.trim();
+      const a = document.getElementById('answerInput').value.trim();
+      if (!q && !frontImageData) { showToast('Please enter a question or add an image', 'error'); return; }
+
+      const card = { question: q, answer: a, questionImage: frontImageData, answerImage: backImageData };
+
+      if (editingIndex > -1) {
+        cards[editingIndex] = card;
+        editingIndex = -1;
+        document.getElementById('addBtnText').textContent = '➕ Add Card';
+        document.getElementById('editorTitle').textContent = 'New Card';
+      } else {
+        cards.push(card);
+      }
+
+      clearEditor();
+      renderCardsList();
+      showToast(`Card ${editingIndex > -1 ? 'updated' : 'added'}!`, 'success');
+    }
+
+    function clearEditor() {
+      document.getElementById('questionInput').value = '';
+      document.getElementById('answerInput').value = '';
+      frontImageData = null;
+      backImageData  = null;
+      document.getElementById('frontImgRow').style.display = 'none';
+      document.getElementById('backImgRow').style.display = 'none';
+      previewFlipped = false;
+      document.getElementById('previewInner').classList.remove('flipped');
+      editingIndex = -1;
+      document.getElementById('addBtnText').textContent = '➕ Add Card';
+      document.getElementById('editorTitle').textContent = 'New Card';
+      updatePreview();
+      updateCounters();
+    }
+
+    function editCard(index) {
+      const card = cards[index];
+      editingIndex = index;
+      document.getElementById('questionInput').value = card.question || '';
+      document.getElementById('answerInput').value   = card.answer || '';
+      frontImageData = card.questionImage || null;
+      backImageData  = card.answerImage || null;
+      if (frontImageData) {
+        document.getElementById('frontImgThumb').src = frontImageData;
+        document.getElementById('frontImgRow').style.display = 'flex';
+      } else {
+        document.getElementById('frontImgRow').style.display = 'none';
+      }
+      if (backImageData) {
+        document.getElementById('backImgThumb').src = backImageData;
+        document.getElementById('backImgRow').style.display = 'flex';
+      } else {
+        document.getElementById('backImgRow').style.display = 'none';
+      }
+      updatePreview();
+      document.getElementById('addBtnText').textContent = '✓ Update Card';
+      document.getElementById('editorTitle').textContent = `Editing Card ${index + 1}`;
+      document.getElementById('questionInput').focus();
+      document.getElementById('cardsList').querySelectorAll('.card-list-item').forEach((el, i) => {
+        el.classList.toggle('editing', i === index);
+      });
+    }
+
+    function deleteCard(index) {
+      cards.splice(index, 1);
+      if (editingIndex === index) { clearEditor(); }
+      renderCardsList();
+      showToast('Card removed', 'info');
+    }
+
+    function renderCardsList() {
+      const list = document.getElementById('cardsList');
+      if (cards.length === 0) {
+        list.innerHTML = '<div style="text-align:center;padding:1.5rem;color:var(--text-subtle);font-size:0.85rem">No cards yet — add your first card above</div>';
+        updateCounters();
+        return;
+      }
+      list.innerHTML = cards.map((c, i) => `
+        <div class="card-list-item ${editingIndex === i ? 'editing' : ''}" onclick="editCard(${i})">
+          <div class="card-num">${i + 1}</div>
+          <div class="card-list-text">
+            <div class="card-list-q">${escHtml(c.question || '(image only)')}</div>
+            <div class="card-list-a">${escHtml(c.answer || '—')}</div>
+          </div>
+          ${c.questionImage ? '<span title="Has image" style="font-size:12px">🖼</span>' : ''}
+          <span class="card-list-del" onclick="event.stopPropagation();deleteCard(${i})">🗑</span>
+        </div>`).join('');
+      updateCounters();
+    }
+
+    function updateCounters() {
+      const n = cards.length;
+      document.getElementById('cardCounter').textContent = editingIndex > -1 ? `Editing ${editingIndex + 1}/${n}` : `${n} card${n !== 1 ? 's' : ''}`;
+      document.getElementById('totalCardsLabel').textContent = n > 0 ? `${n} card${n !== 1 ? 's' : ''} in deck` : '';
+    }
+
+    // ── Color ─────────────────────────────────────────
+    function selectColor(el) {
+      document.querySelectorAll('.color-opt').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+      selectedColor = el.dataset.color;
+      const grad = colorMap[selectedColor];
+      document.getElementById('previewFront').style.background = grad;
+    }
+    function selectColorByName(name) {
+      const el = document.querySelector(`.color-opt[data-color="${name}"]`);
+      if (el) selectColor(el);
+    }
+
+    // ── Save deck ─────────────────────────────────────
+    async function saveDeck() {
+      const title = document.getElementById('deckTitle').value.trim();
+      if (!title) { showToast('Please enter a deck title', 'error'); document.getElementById('deckTitle').focus(); return; }
+      if (cards.length === 0) { showToast('Add at least one card before saving', 'error'); return; }
+
+      const btn = document.getElementById('saveBtn');
+      btn.textContent = 'Saving…';
+      btn.disabled = true;
+
+      try {
+        const deck = {
+          id:          currentDeckId,
+          title,
+          description: document.getElementById('deckDesc').value.trim(),
+          tag:         document.getElementById('deckTag').value.trim(),
+          isPublic:    document.getElementById('isPublicToggle').checked,
+          color:       selectedColor,
+          cards
+        };
+        const saved = await Decks.save(deck);
+        currentDeckId = saved.id;
+        window.history.replaceState({}, '', `create.html?id=${saved.id}`);
+        document.getElementById('pageTitle').textContent = 'Edit Deck';
+        showToast('Deck saved! ⚡', 'success');
+      } catch(e) {
+        showToast('Save failed: ' + e.message, 'error');
+      }
+      btn.textContent = 'Update Deck';
+      btn.disabled = false;
+    }
+
+    // ── Export from create page ───────────────────────
+    async function exportCurrent(type) {
+      const title = document.getElementById('deckTitle').value.trim() || 'My Deck';
+      if (cards.length === 0) { showToast('No cards to export', 'error'); return; }
+      const deck = { title, description: document.getElementById('deckDesc').value.trim(), cards };
+      if (type === 'json') {
+        exportDeckJSON(deck);
+        showToast('JSON downloaded!', 'success');
+      } else {
+        showToast('Generating PDF…', 'info');
+        try { await exportDeckPDF(deck); showToast('PDF downloaded!', 'success'); }
+        catch(e) { showToast('PDF failed: ' + e.message, 'error'); }
+      }
+    }
+
+    // ── Keyboard shortcut ─────────────────────────────
+    document.addEventListener('keydown', e => {
+      if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') { e.preventDefault(); addCard(); }
+    });
+
+    function escHtml(str) {
+      return String(str).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+    }
+
+    // ── Auth: load deck if user signs in ─────────────
+    Auth.onAuthChange(() => {});
+  </script>
+</body>
+</html>

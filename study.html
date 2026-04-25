@@ -1,0 +1,712 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Study — FlashForge</title>
+  <link rel="stylesheet" href="css/styles.css">
+  <style>
+    .study-page {
+      min-height: calc(100vh - 64px);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 2rem 1.5rem 4rem;
+    }
+
+    .study-header {
+      width: 100%;
+      max-width: 760px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 2rem;
+      flex-wrap: wrap;
+      gap: 0.75rem;
+    }
+
+    .study-progress {
+      width: 100%;
+      max-width: 760px;
+      margin-bottom: 2rem;
+    }
+    .study-progress-bar { height: 4px; background: var(--bg-elevated); border-radius: 999px; margin-top: 8px; }
+    .study-progress-fill { height: 100%; background: linear-gradient(90deg, var(--accent), var(--accent-2)); border-radius: 999px; transition: width 0.4s ease; }
+
+    /* Big flashcard */
+    .study-card-area {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .study-card-wrap {
+      width: 100%;
+      height: 380px;
+      perspective: 1400px;
+      margin-bottom: 2rem;
+      cursor: pointer;
+    }
+    @media (max-width: 600px) { .study-card-wrap { height: 280px; } }
+
+    .study-card-inner {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      transform-style: preserve-3d;
+      transition: transform 0.65s cubic-bezier(0.4,0,0.2,1);
+      border-radius: var(--radius-xl);
+    }
+    .study-card-inner.flipped { transform: rotateY(180deg); }
+
+    .study-card-face {
+      position: absolute;
+      inset: 0;
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      border-radius: var(--radius-xl);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2.5rem;
+      text-align: center;
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+    .study-front {
+      background: linear-gradient(145deg, #252D4A 0%, #1A2038 100%);
+      border: 1px solid rgba(108,99,255,0.3);
+    }
+    .study-back {
+      transform: rotateY(180deg);
+      background: linear-gradient(145deg, #0F2A2A 0%, #0A1E1E 100%);
+      border: 1px solid rgba(16,217,164,0.3);
+    }
+    [data-theme="light"] .study-front {
+      background: linear-gradient(145deg, #E8EEFA, #DDE5FF);
+      border: 1px solid rgba(108,99,255,0.25);
+    }
+    [data-theme="light"] .study-back {
+      background: linear-gradient(145deg, #D6FBF0, #E0F7F0);
+      border: 1px solid rgba(16,217,164,0.25);
+    }
+
+    .study-card-label {
+      font-size: 0.72rem;
+      font-weight: 700;
+      letter-spacing: 0.12em;
+      text-transform: uppercase;
+      margin-bottom: 1.25rem;
+      opacity: 0.5;
+    }
+    .study-front .study-card-label { color: #6C63FF; }
+    .study-back  .study-card-label { color: #10D9A4; }
+    [data-theme="light"] .study-front .study-card-label { color: #4A3FE0; }
+    [data-theme="light"] .study-back  .study-card-label { color: #07856B; }
+
+    .study-card-text {
+      font-family: var(--font-head);
+      font-size: clamp(1.1rem, 3vw, 1.7rem);
+      font-weight: 600;
+      line-height: 1.35;
+      color: var(--text);
+    }
+    [data-theme="light"] .study-card-text { color: #1A1F30; }
+
+    .study-card-img {
+      max-width: 100%;
+      max-height: 140px;
+      border-radius: var(--radius);
+      object-fit: contain;
+      margin-bottom: 1rem;
+    }
+
+    .study-flip-hint {
+      position: absolute;
+      bottom: 1.25rem;
+      font-size: 0.75rem;
+      opacity: 0.35;
+      letter-spacing: 0.04em;
+    }
+
+    /* Controls */
+    .study-controls {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .study-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 4px;
+      padding: 0.8rem 1.4rem;
+      border-radius: var(--radius);
+      font-size: 0.9rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition);
+    }
+    .study-btn span.sub { font-size: 0.68rem; font-weight: 400; opacity: 0.7; margin-top: 1px; }
+
+    .btn-wrong {
+      background: rgba(255,71,87,0.12);
+      border: 1px solid rgba(255,71,87,0.3);
+      color: #FF4757;
+    }
+    .btn-wrong:hover { background: rgba(255,71,87,0.22); border-color: #FF4757; }
+
+    .btn-flip-big {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 0.8rem 2rem;
+    }
+    .btn-flip-big:hover { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+    .btn-correct {
+      background: rgba(16,217,164,0.12);
+      border: 1px solid rgba(16,217,164,0.3);
+      color: #10D9A4;
+    }
+    .btn-correct:hover { background: rgba(16,217,164,0.22); border-color: #10D9A4; }
+
+    /* Answer revealed controls */
+    .answer-controls { animation: fadeUp 0.3s ease both; }
+    @keyframes fadeUp { from { opacity:0; transform: translateY(10px); } to { opacity:1; transform:translateY(0); } }
+
+    /* Navigation */
+    .study-nav {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-top: 1.5rem;
+    }
+    .study-nav-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition);
+      font-size: 16px;
+    }
+    .study-nav-btn:hover { border-color: var(--accent); color: var(--accent); }
+    .study-nav-btn:disabled { opacity: 0.3; cursor: not-allowed; }
+
+    .study-counter {
+      font-family: var(--font-head);
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text);
+      min-width: 80px;
+      text-align: center;
+    }
+
+    /* Mode selector */
+    .study-modes {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 1.5rem;
+    }
+    .mode-chip {
+      padding: 0.35rem 0.9rem;
+      border-radius: 999px;
+      font-size: 0.82rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: 1px solid var(--border);
+      color: var(--text-muted);
+      background: var(--bg-card);
+      transition: all var(--transition);
+    }
+    .mode-chip:hover { border-color: var(--border-hover); }
+    .mode-chip.active { background: var(--accent-dim); border-color: var(--accent); color: var(--accent); }
+
+    /* Stats overlay */
+    .session-stats {
+      display: flex;
+      gap: 1.25rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+    .session-stat { text-align: center; }
+    .session-stat-val { font-size: 1.3rem; font-weight: 700; font-family: var(--font-head); }
+    .session-stat-label { font-size: 0.72rem; color: var(--text-muted); text-transform: uppercase; letter-spacing: 0.04em; }
+
+    /* Completed screen */
+    .study-complete {
+      text-align: center;
+      padding: 3rem 1.5rem;
+      max-width: 500px;
+      margin: 0 auto;
+    }
+    .complete-icon { font-size: 3rem; margin-bottom: 1rem; animation: bounce 0.8s ease; }
+    @keyframes bounce { 0%,100%{transform:translateY(0)} 50%{transform:translateY(-12px)} }
+    .complete-score {
+      font-family: var(--font-head);
+      font-size: 3.5rem;
+      font-weight: 700;
+      color: var(--accent);
+      margin: 0.5rem 0;
+    }
+
+    /* Loading */
+    .study-loading { text-align: center; padding: 4rem 1.5rem; }
+
+    /* Keyboard hint */
+    .kbd-hint {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      justify-content: center;
+      margin-top: 1.25rem;
+      flex-wrap: wrap;
+    }
+    .kbd-pair { display: flex; align-items: center; gap: 5px; font-size: 0.78rem; color: var(--text-subtle); }
+  </style>
+</head>
+<body>
+  <nav class="navbar">
+    <a href="index.html" class="nav-brand">
+      <div class="logo-icon">⚡</div>
+      FlashForge
+    </a>
+    <div class="nav-actions">
+      <button class="theme-toggle" onclick="toggleTheme()">🌙</button>
+      <a href="app.html" class="btn btn-secondary btn-sm">← My Decks</a>
+    </div>
+  </nav>
+
+  <div class="page-wrap">
+    <div class="study-page">
+      <!-- Loading -->
+      <div id="studyLoading" class="study-loading">
+        <div class="spinner" style="width:32px;height:32px;margin:0 auto 1rem"></div>
+        <p>Loading deck…</p>
+      </div>
+
+      <!-- Error -->
+      <div id="studyError" class="empty-state hidden">
+        <div class="empty-state-icon">😕</div>
+        <h3>Deck not found</h3>
+        <p>This deck may have been deleted or you don't have access.</p>
+        <a href="app.html" class="btn btn-primary">← Back to My Decks</a>
+      </div>
+
+      <!-- Study UI -->
+      <div id="studyUI" class="hidden" style="width:100%;max-width:760px;margin:0 auto">
+        <!-- Header -->
+        <div class="study-header">
+          <div>
+            <h2 id="studyDeckTitle" style="margin-bottom:4px">Loading…</h2>
+            <div style="display:flex;align-items:center;gap:8px">
+              <span class="badge" id="studyTag"></span>
+              <span class="text-sm text-muted" id="studyCardOwner"></span>
+            </div>
+          </div>
+          <div style="display:flex;gap:0.6rem;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" onclick="shuffleCards()">🔀 Shuffle</button>
+            <button class="btn btn-secondary btn-sm" onclick="restartSession()">↺ Restart</button>
+            <div class="dropdown">
+              <button class="btn btn-secondary btn-sm" onclick="toggleDropdown('studyMenu')">⋯</button>
+              <div class="dropdown-menu" id="studyMenu">
+                <div class="dropdown-item" onclick="exportStudyJSON()">📁 Download JSON</div>
+                <div class="dropdown-item" onclick="exportStudyPDF()">📄 Download PDF</div>
+                <div class="dropdown-sep"></div>
+                <div class="dropdown-item" id="editDeckLink">✏️ Edit Deck</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Progress -->
+        <div class="study-progress">
+          <div style="display:flex;justify-content:space-between;align-items:center">
+            <span class="text-sm text-muted">Progress</span>
+            <span class="text-sm text-muted"><span id="progressLabel">0</span> / <span id="progressTotal">0</span></span>
+          </div>
+          <div class="study-progress-bar">
+            <div class="study-progress-fill" id="progressFill" style="width:0%"></div>
+          </div>
+        </div>
+
+        <!-- Mode chips -->
+        <div class="study-modes">
+          <div class="mode-chip active" onclick="setMode('all', this)">All Cards</div>
+          <div class="mode-chip" onclick="setMode('wrong', this)" id="modeWrongChip">Missed Only</div>
+        </div>
+
+        <!-- Main study area (normal mode) -->
+        <div id="studyMainArea" class="study-card-area">
+          <!-- Card -->
+          <div class="study-card-wrap" id="studyCardWrap" onclick="handleCardClick()">
+            <div class="study-card-inner" id="studyCardInner">
+              <div class="study-card-face study-front" id="studyFront">
+                <div class="study-card-label">Question</div>
+                <img id="studyFrontImg" class="study-card-img hidden" src="" alt="">
+                <div class="study-card-text" id="studyFrontText"></div>
+                <div class="study-flip-hint">Click to reveal answer</div>
+              </div>
+              <div class="study-card-face study-back" id="studyBack">
+                <div class="study-card-label">Answer</div>
+                <img id="studyBackImg" class="study-card-img hidden" src="" alt="">
+                <div class="study-card-text" id="studyBackText"></div>
+                <div class="study-flip-hint">Click to flip back</div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Controls -->
+          <div id="beforeFlipControls" class="study-controls">
+            <button class="study-btn btn-flip-big" onclick="handleCardClick()">
+              ↻ Flip Card
+              <span class="sub">or press Space</span>
+            </button>
+          </div>
+          <div id="afterFlipControls" class="study-controls answer-controls hidden">
+            <button class="study-btn btn-wrong" onclick="markCard(false)">
+              ✕ Missed
+              <span class="sub">← Arrow Left</span>
+            </button>
+            <button class="study-btn btn-flip-big" onclick="handleCardClick()">
+              ↻ Flip
+              <span class="sub">Space</span>
+            </button>
+            <button class="study-btn btn-correct" onclick="markCard(true)">
+              ✓ Got it!
+              <span class="sub">→ Arrow Right</span>
+            </button>
+          </div>
+
+          <!-- Navigation -->
+          <div class="study-nav">
+            <button class="study-nav-btn" id="prevBtn" onclick="navigate(-1)" title="Previous (←)">←</button>
+            <div class="study-counter"><span id="navCurrent">1</span> / <span id="navTotal">1</span></div>
+            <button class="study-nav-btn" id="nextBtn" onclick="navigate(1)" title="Next (→)">→</button>
+          </div>
+
+          <!-- Session stats -->
+          <div class="session-stats">
+            <div class="session-stat">
+              <div class="session-stat-val" id="statKnown" style="color:var(--accent)">0</div>
+              <div class="session-stat-label">✓ Known</div>
+            </div>
+            <div class="session-stat">
+              <div class="session-stat-val" id="statMissed" style="color:var(--danger)">0</div>
+              <div class="session-stat-label">✕ Missed</div>
+            </div>
+            <div class="session-stat">
+              <div class="session-stat-val" id="statRemaining" style="color:var(--text-muted)">0</div>
+              <div class="session-stat-label">Remaining</div>
+            </div>
+          </div>
+
+          <!-- Keyboard hints -->
+          <div class="kbd-hint">
+            <div class="kbd-pair"><kbd class="kbd">Space</kbd> flip card</div>
+            <div class="kbd-pair"><kbd class="kbd">←</kbd> missed</div>
+            <div class="kbd-pair"><kbd class="kbd">→</kbd> got it</div>
+            <div class="kbd-pair"><kbd class="kbd">R</kbd> restart</div>
+          </div>
+        </div>
+
+        <!-- Complete screen -->
+        <div id="studyComplete" class="hidden">
+          <div class="study-complete">
+            <div class="complete-icon" id="completeIcon">🎉</div>
+            <h2>Session Complete!</h2>
+            <div class="complete-score" id="completeScore">0%</div>
+            <p id="completeMsg" style="margin-bottom:1.5rem"></p>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:0.75rem;margin-bottom:1.5rem">
+              <div class="stat-card">
+                <div class="stat-value" id="completeKnown" style="color:var(--accent)">0</div>
+                <div class="stat-label">Known</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="completeMissed" style="color:var(--danger)">0</div>
+                <div class="stat-label">Missed</div>
+              </div>
+            </div>
+            <div style="display:flex;gap:0.75rem;justify-content:center;flex-wrap:wrap">
+              <button class="btn btn-primary" onclick="restartSession()">↺ Study Again</button>
+              <button class="btn btn-secondary" onclick="reviewMissed()" id="reviewMissedBtn">Review Missed</button>
+              <a href="app.html" class="btn btn-secondary">← My Decks</a>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast-container"></div>
+  <script src="js/theme.js"></script>
+  <script src="js/data.js"></script>
+  <script>
+    let deck = null;
+    let studyCards = [];
+    let currentIndex = 0;
+    let isFlipped = false;
+    let known = new Set();
+    let missed = new Set();
+    let studyMode = 'all'; // 'all' | 'wrong'
+
+    // ── Load deck ─────────────────────────────────────
+    window.addEventListener('DOMContentLoaded', async () => {
+      const params = new URLSearchParams(window.location.search);
+      const id = params.get('id');
+      if (!id) { showError(); return; }
+
+      try {
+        deck = await Decks.getById(id);
+        if (!deck || !deck.cards?.length) { showError(); return; }
+        initStudy();
+      } catch(e) {
+        console.error(e);
+        showError();
+      }
+    });
+
+    function showError() {
+      document.getElementById('studyLoading').classList.add('hidden');
+      document.getElementById('studyError').classList.remove('hidden');
+    }
+
+    function initStudy() {
+      document.getElementById('studyLoading').classList.add('hidden');
+      document.getElementById('studyUI').classList.remove('hidden');
+      document.getElementById('studyDeckTitle').textContent = deck.title || 'Untitled Deck';
+      if (deck.tag) document.getElementById('studyTag').textContent = deck.tag;
+      document.getElementById('editDeckLink').onclick = () => window.location.href = `create.html?id=${deck.id}`;
+      document.title = `${deck.title || 'Study'} — FlashForge`;
+      resetSession();
+    }
+
+    function resetSession() {
+      studyCards = [...(deck.cards || [])];
+      currentIndex = 0;
+      known.clear();
+      missed.clear();
+      isFlipped = false;
+      document.getElementById('studyCardInner').classList.remove('flipped');
+      showCard(0);
+      updateStats();
+      updateProgress();
+      showStudyArea();
+    }
+
+    function shuffleCards() {
+      for (let i = studyCards.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [studyCards[i], studyCards[j]] = [studyCards[j], studyCards[i]];
+      }
+      currentIndex = 0;
+      known.clear(); missed.clear();
+      isFlipped = false;
+      document.getElementById('studyCardInner').classList.remove('flipped');
+      showCard(0);
+      updateStats();
+      updateProgress();
+      showStudyArea();
+      showToast('Cards shuffled!', 'info');
+    }
+
+    function restartSession() {
+      studyCards = [...(deck.cards || [])];
+      known.clear(); missed.clear();
+      currentIndex = 0;
+      isFlipped = false;
+      document.getElementById('studyCardInner').classList.remove('flipped');
+      setMode('all', document.querySelector('.mode-chip'));
+      showCard(0);
+      updateStats();
+      updateProgress();
+      showStudyArea();
+    }
+
+    function setMode(mode, el) {
+      studyMode = mode;
+      document.querySelectorAll('.mode-chip').forEach(c => c.classList.remove('active'));
+      el.classList.add('active');
+      if (mode === 'wrong') {
+        if (missed.size === 0) { showToast('No missed cards yet!', 'info'); setMode('all', document.querySelector('.mode-chip')); return; }
+        studyCards = (deck.cards || []).filter((_, i) => missed.has(i));
+        missed.clear(); known.clear();
+        currentIndex = 0;
+        isFlipped = false;
+        document.getElementById('studyCardInner').classList.remove('flipped');
+        showCard(0);
+        updateStats();
+        updateProgress();
+        showStudyArea();
+      }
+    }
+
+    function showStudyArea() {
+      document.getElementById('studyMainArea').classList.remove('hidden');
+      document.getElementById('studyComplete').classList.add('hidden');
+    }
+
+    // ── Card display ──────────────────────────────────
+    function showCard(idx) {
+      if (!studyCards[idx]) return;
+      const card = studyCards[idx];
+      isFlipped = false;
+      document.getElementById('studyCardInner').classList.remove('flipped');
+
+      // Front
+      const frontImg = document.getElementById('studyFrontImg');
+      const frontTxt = document.getElementById('studyFrontText');
+      if (card.questionImage) {
+        frontImg.src = card.questionImage;
+        frontImg.classList.remove('hidden');
+      } else { frontImg.classList.add('hidden'); }
+      frontTxt.textContent = card.question || '';
+
+      // Back
+      const backImg = document.getElementById('studyBackImg');
+      const backTxt = document.getElementById('studyBackText');
+      if (card.answerImage) {
+        backImg.src = card.answerImage;
+        backImg.classList.remove('hidden');
+      } else { backImg.classList.add('hidden'); }
+      backTxt.textContent = card.answer || '';
+
+      // Controls
+      document.getElementById('beforeFlipControls').classList.remove('hidden');
+      document.getElementById('afterFlipControls').classList.add('hidden');
+
+      // Nav
+      document.getElementById('navCurrent').textContent = idx + 1;
+      document.getElementById('navTotal').textContent = studyCards.length;
+      document.getElementById('prevBtn').disabled = idx === 0;
+      document.getElementById('nextBtn').disabled = idx === studyCards.length - 1;
+
+      updateProgress();
+    }
+
+    function handleCardClick() {
+      isFlipped = !isFlipped;
+      document.getElementById('studyCardInner').classList.toggle('flipped', isFlipped);
+      if (isFlipped) {
+        document.getElementById('beforeFlipControls').classList.add('hidden');
+        document.getElementById('afterFlipControls').classList.remove('hidden');
+      } else {
+        document.getElementById('beforeFlipControls').classList.remove('hidden');
+        document.getElementById('afterFlipControls').classList.add('hidden');
+      }
+    }
+
+    function markCard(isKnown) {
+      const originalIndex = deck.cards.indexOf(studyCards[currentIndex]);
+      if (isKnown) { known.add(originalIndex); missed.delete(originalIndex); }
+      else          { missed.add(originalIndex); known.delete(originalIndex); }
+      updateStats();
+
+      // Auto-advance
+      if (currentIndex < studyCards.length - 1) {
+        currentIndex++;
+        showCard(currentIndex);
+      } else {
+        showComplete();
+      }
+    }
+
+    function navigate(dir) {
+      const next = currentIndex + dir;
+      if (next < 0 || next >= studyCards.length) return;
+      currentIndex = next;
+      showCard(currentIndex);
+    }
+
+    function updateProgress() {
+      const reviewed = known.size + missed.size;
+      const total = deck.cards?.length || 0;
+      const pct = total ? Math.round((reviewed / total) * 100) : 0;
+      document.getElementById('progressFill').style.width = pct + '%';
+      document.getElementById('progressLabel').textContent = reviewed;
+      document.getElementById('progressTotal').textContent = total;
+    }
+
+    function updateStats() {
+      const remaining = studyCards.length - (known.size + missed.size);
+      document.getElementById('statKnown').textContent = known.size;
+      document.getElementById('statMissed').textContent = missed.size;
+      document.getElementById('statRemaining').textContent = Math.max(0, remaining);
+      document.getElementById('modeWrongChip').textContent = `Missed Only (${missed.size})`;
+    }
+
+    function showComplete() {
+      const total  = known.size + missed.size;
+      const pct    = total ? Math.round((known.size / total) * 100) : 0;
+      document.getElementById('studyMainArea').classList.add('hidden');
+      document.getElementById('studyComplete').classList.remove('hidden');
+      document.getElementById('completeScore').textContent = pct + '%';
+      document.getElementById('completeKnown').textContent  = known.size;
+      document.getElementById('completeMissed').textContent = missed.size;
+
+      let icon = '🎉', msg = '';
+      if      (pct === 100) { icon = '🏆'; msg = 'Perfect score! You nailed every single card.'; }
+      else if (pct >= 80)   { icon = '🌟'; msg = 'Great job! Almost there — review the ones you missed.'; }
+      else if (pct >= 60)   { icon = '👍'; msg = 'Solid effort! Keep going — use "Missed Only" mode to focus.'; }
+      else                  { icon = '💪'; msg = `Keep at it! ${missed.size} cards to review. Practice makes perfect.`; }
+
+      document.getElementById('completeIcon').textContent = icon;
+      document.getElementById('completeMsg').textContent = msg;
+      document.getElementById('reviewMissedBtn').disabled = missed.size === 0;
+    }
+
+    function reviewMissed() {
+      setMode('wrong', document.querySelectorAll('.mode-chip')[1]);
+    }
+
+    // ── Export ────────────────────────────────────────
+    function exportStudyJSON() { if (deck) { exportDeckJSON(deck); showToast('JSON downloaded!', 'success'); } }
+    async function exportStudyPDF() {
+      if (!deck) return;
+      showToast('Generating PDF…', 'info');
+      try { await exportDeckPDF(deck); showToast('PDF downloaded!', 'success'); }
+      catch(e) { showToast('PDF failed: ' + e.message, 'error'); }
+    }
+
+    // ── Keyboard ──────────────────────────────────────
+    document.addEventListener('keydown', e => {
+      if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+      switch(e.key) {
+        case ' ':
+        case 'f':
+        case 'F':
+          e.preventDefault();
+          handleCardClick();
+          break;
+        case 'ArrowRight':
+          if (isFlipped) markCard(true);
+          else navigate(1);
+          break;
+        case 'ArrowLeft':
+          if (isFlipped) markCard(false);
+          else navigate(-1);
+          break;
+        case 'r':
+        case 'R':
+          restartSession();
+          break;
+        case 's':
+        case 'S':
+          shuffleCards();
+          break;
+      }
+    });
+  </script>
+</body>
+</html>
